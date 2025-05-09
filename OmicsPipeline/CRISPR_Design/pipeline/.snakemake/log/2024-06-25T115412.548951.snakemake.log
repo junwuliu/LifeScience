@@ -1,0 +1,7 @@
+Building DAG of jobs...
+MissingInputException in rule gRNA_design in file /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/design_pip.snakemake.py, line 25:
+Missing input files for rule gRNA_design:
+    output: /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/png/TBX5.gene_pred.gRNA.fa
+    wildcards: outdir=/public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/png, sample=TBX5.gene_pred
+    affected files:
+        TBX5.gene_pred.txt

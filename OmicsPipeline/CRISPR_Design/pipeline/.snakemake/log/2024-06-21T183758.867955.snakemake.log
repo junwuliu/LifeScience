@@ -1,0 +1,30 @@
+Building DAG of jobs...
+Using shell: /bin/bash
+Provided cluster nodes: 1
+Job stats:
+job            count
+-----------  -------
+MergeScore         1
+all                1
+gRNA_design        1
+off_target         1
+plot               2
+total              6
+
+Select jobs to execute...
+
+[Fri Jun 21 18:37:59 2024]
+rule plot:
+    input: /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.on_off.score.csv
+    output: /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.gRNA_design.png
+    jobid: 5
+    reason: Missing output files: /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.gRNA_design.png
+    wildcards: outdir=/public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png, sample=TBX5
+    resources: mem_mb=1000, mem_mib=954, disk_mb=1000, disk_mib=954, tmpdir=<TBD>
+
+Error submitting jobscript (exit code 1):
+
+Shutting down, this might take some time.
+Terminating processes on user request, this might take some time.
+No --cluster-cancel given. Will exit after finishing currently running jobs.
+Complete log: ../.snakemake/log/2024-06-21T183758.867955.snakemake.log

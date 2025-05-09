@@ -1,0 +1,60 @@
+.libPaths('')
+suppressMessages(library('Seurat'))
+suppressMessages(library("optparse"))
+suppressMessages(library(stringr))
+library('stats') ## aov
+library('dplyr')
+option_list = list(make_option("--indir", type = "character", default = NULL, help = "metacluster csv dir"),
+                  make_option("--Rdir", type = "character", default = NULL, help = "After step2 Rdata dir"),
+                  make_option("--type", type = "character", default = NULL, help = "scRNA Rdata"),
+                  make_option("--Fscore", type = "character", default = NULL, help = "scRNA Rdata"),
+                   make_option("--outdir", type = "character", default = NULL, help = ""))
+
+args <- parse_args(OptionParser(option_list=option_list))
+LoadToEnvironment <- function(RData){data = get(load(RData)[1]);return(data)}
+
+Rdir = args$Rdir
+indir = args$indir
+type= args$type
+
+informative_datasets = list.files("*informatvieGene.csv", path=indir,full.names = TRUE)
+commonGene_datasets = list.files("*CommonGene.csv", path=indir,full.names = TRUE)
+
+total_matrix = data.frame()
+obj_list = list()
+
+for (i in 1:length(commonGene_datasets)){
+	id = strsplit(basename(commonGene_datasets[i]),split='.',fixed=TRUE)[[1]][1]
+	print (id)
+	sub_commonGene_matrix = read.table(commonGene_datasets[i],header=T,sep=",")
+	sub_informative_matrix = read.table(informative_datasets[i],header=T,sep=",")
+	mca = LoadToEnvironment(paste(Rdir,"/",id,".",type,".T.Rdata",sep=""))
+	mca$minicluster = paste(id,"metacluster",mca$seurat_clusters,sep="_")
+	mca$datasource = id
+	metainfo = mca@meta.data
+	metainfo = metainfo[,c("orig.ident","nCount_RNA","nFeature_RNA","donor","S.Score","G2M.Score","Phase","DIG.Score1","DIG.Score2","seurat_clusters","minicluster","datasource")]
+	mca@meta.data = metainfo
+	obj_list[[i]] = mca
+	if (i == 1){
+		total_matrix = sub_matrix
+	}else{
+		total_matrix = merge(total_matrix,sub_matrix)
+	}
+}
+list_y = obj_list[-1]
+mca<-merge(obj_list[[1]],y=list_y)
+
+rownames(total_matrix) = total_matrix$gene
+total_matrix = dplyr::select(total_matrix,-gene)
+mca_scaled <- CreateSeuratObject(total_matrix, project = type, min.cells = 0, min.features = 0)
+total_matrix = as.array(as.matrix(total_matrix))
+
+
+mca@assays$RNA@scale.data = total_matrix
+object <- FindVariableFeatures(object, selection.method = select.method, nfeatures = nfeatures)
+mca  <- RunPCA(mca,  npcs = 20)
+mca <- RunHarmony(mca,group.by.vars="orig.ident",dims.use = 1:15,max.iter.harmony = 10)
+mca <- RunUMAP(mca,reduction = "harmony", dims=1:15)
+mca <- FindNeighbors(mca,reduction = "harmony",  dims=1:15)
+
+

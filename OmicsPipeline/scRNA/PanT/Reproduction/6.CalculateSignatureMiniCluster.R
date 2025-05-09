@@ -1,0 +1,81 @@
+.libPaths('')
+suppressMessages(library('Seurat'))
+suppressMessages(library("optparse"))
+suppressMessages(library(stringr))
+library('stats') ## aov
+library('dplyr')
+library("harmony")
+option_list = list(make_option("--indir", type = "character", default = NULL, help = "dir include minicluster Rdata"),
+                  make_option("--Pandata", type = "character", default = NULL, help = "Merged Pan Rdata"),
+                  make_option("--Fscore", type = "character", default = NULL, help = "Fscore"),
+                  make_option("--metacol", type = "character", default = NULL, help = "which colnames of meta.data to calculate signature gene"),
+                  make_option("--outdir", type = "character", default = NULL, help = ""))
+
+args <- parse_args(OptionParser(option_list=option_list))
+LoadToEnvironment <- function(RData){data = get(load(RData)[1]);return(data)}
+
+source("/public/data/scDT/SingleCellDownload/PanT/Script/Limma.R")
+Fscore = read.table(args$Fscore,header=T,sep="\t",row.names=1)
+commonGene = rownames(Fscore)
+
+indir=args$indir
+type=args$type
+outdir=args$outdir
+metacol = args$metacol
+
+mca = LoadToEnvironment(args$Pandata)
+metainfo = mca@meta.data
+alltype = unique(metainfo[,metacol])
+
+#doublet.mini.clusters = list()
+#if ("FOXP3+ T" %in% alltype){
+#	DoubletCluster = mca[,metainfo[,metacol] == "FOXP3+ T"]
+#	doublet.mini.clusters = rownames(DoubletCluster)
+#}
+
+for (i in alltype){
+	sub = mca[,metainfo[,metacol] == i]
+	datasource = unique(sub$datasource)
+	print (i)
+	effect_size = data.frame()
+	for (j in datasource){
+		print (j)
+		mini.clusters = rownames(sub[,sub$datasource == j]@meta.data)
+		sub_dataset = mca[,mca$datasource == j]
+		sub_dataset$Compare = "Control"
+		sub_dataset$Compare[sub_dataset@meta.data[,metacol] == i] = i
+		CancerType = unique(sub[,sub$datasource == j]$CancerType)
+		effect_size_j = Limma(sub_dataset,metaname="Compare",case=i,control="Control")
+		effect_size_j$gene = rownames(effect_size_j)
+		effect_size_j$CancerType = CancerType
+		effect_size_j$datasource = j
+		effect_size_j$Type = i
+		effect_size_j$Freq = length(mini.clusters)
+		effect_size = rbind(effect_size,effect_size_j)
+	}
+		#print (head(effect_size))
+	write.table(effect_size,file=paste(outdir,"/",i,".metaMA.xls",sep=""),sep="\t",row.names=T,col.names=T,quote=F)
+	signatureGene = data.frame()
+	for(gene in unique(effect_size$gene)){
+		subGene = effect_size[effect_size$gene ==gene,]
+		#avg_ES = round(mean(subGene$d),3)  ## 均值会因为某个数据集过大而不实，如PHKA2
+		avg_ES = round(median(subGene$d),3)
+		pval = cor.test(subGene$d,subGene$vard,method="spearman")$p.val
+		tmp = data.frame(gene,avg_ES,pval)
+		signatureGene = rbind(signatureGene,tmp)
+	}
+	signatureGene$qval = p.adjust(signatureGene$pval,method="BH")
+	write.table(signatureGene,file=paste(outdir,"/",i,".signatureGene.xls",sep=""),sep="\t",row.names=T,col.names=T,quote=F)
+}
+
+#	signatureGene = data.frame()
+#	for(gene in marker[[1]]){
+#		subGene = effect_size[effect_size$gene ==gene,]
+#		avg_ES = round(mean(subGene$d),3)
+#		pval = cor.test(subGene$d,subGene$vard)$p.val
+#		tmp = data.frame(gene,avg_ES,pval)
+#		signatureGene = rbind(signatureGene,tmp)
+#	}
+
+
+

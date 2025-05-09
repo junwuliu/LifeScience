@@ -1,0 +1,82 @@
+Building DAG of jobs...
+Using shell: /bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Job stats:
+job            count
+-----------  -------
+MergeScore         2
+all                1
+gRNA_design        2
+off_target         2
+plot               2
+total              9
+
+Select jobs to execute...
+
+[Fri Jun 21 18:36:53 2024]
+rule gRNA_design:
+    input: TBX5.txt
+    output: /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.gRNA.fa
+    jobid: 8
+    reason: Missing output files: /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.gRNA.fa
+    wildcards: outdir=/public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png, sample=TBX5
+    resources: tmpdir=/tmp, mem_mb=5000, mem_mib=4769
+
+/public/home/bioinfo/miniconda3/bin/python3 /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/gRNA_design.py -g TBX5 -gpd /public/home/liujunwu/workdir/Omics/Doctor.XuYD/Genome/NCBI.GRCh38.annotation.gpd --ref /public/home/liujunwu/workdir/Omics/Doctor.XuYD/Genome/GRCh38.p14_genomic.fna -o /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.gRNA.on_score.csv -gf /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.gRNA.fa -a /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.gene_pred.txt -b /public/home/liujunwu/software/miniconda3/bin/bedtools --tmp /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png --exon 1
+[Fri Jun 21 18:36:56 2024]
+Finished job 8.
+1 of 9 steps (11%) done
+Select jobs to execute...
+
+[Fri Jun 21 18:36:56 2024]
+rule off_target:
+    input: /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.gRNA.fa
+    output: /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.gRNA.sam
+    jobid: 7
+    reason: Missing output files: /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.gRNA.sam; Input files updated by another job: /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.gRNA.fa
+    wildcards: outdir=/public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png, sample=TBX5
+    resources: tmpdir=/tmp, mem_mb=10000, mem_mib=9537
+
+/public/home/bioinfo/miniconda3/bin/bowtie2 -f -L 15 -N 1 -a -p 1 --quiet -U /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.gRNA.fa -x /public/home/liujunwu/workdir/Omics/Doctor.XuYD/Genome/GRCh38.p14_genomic.fna > /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.gRNA.sam
+[Fri Jun 21 18:36:58 2024]
+Finished job 7.
+2 of 9 steps (22%) done
+Select jobs to execute...
+
+[Fri Jun 21 18:36:58 2024]
+rule MergeScore:
+    input: /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.gRNA.sam
+    output: /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.on_off.score.csv
+    jobid: 6
+    reason: Missing output files: /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.on_off.score.csv; Input files updated by another job: /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.gRNA.sam
+    wildcards: outdir=/public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png, sample=TBX5
+    resources: tmpdir=/tmp
+
+/public/home/bioinfo/miniconda3/bin/python3 /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/gRNAmergeScore.py -s /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.gRNA.sam -tmp /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png -r /public/home/liujunwu/workdir/Omics/Doctor.XuYD/Genome/GRCh38.p14_genomic.fna -g TBX5 -o /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.off_target.csv -m /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.on_off.score.csv -rg /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.gRNA.on_score.csv -b /public/home/liujunwu/software/miniconda3/bin/bedtools
+[Fri Jun 21 18:36:59 2024]
+Finished job 6.
+3 of 9 steps (33%) done
+Select jobs to execute...
+
+[Fri Jun 21 18:36:59 2024]
+rule plot:
+    input: /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.on_off.score.csv
+    output: /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.gRNA_design.png
+    jobid: 5
+    reason: Missing output files: /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.gRNA_design.png; Input files updated by another job: /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.on_off.score.csv
+    wildcards: outdir=/public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png, sample=TBX5
+    resources: tmpdir=/tmp
+
+/public/software/R/bin/Rscript /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/plot_Structure_gRNA.R --gene TBX5 --gpd /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.gene_pred.txt --gscore /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.on_off.score.csv --outfile /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.gRNA_design.png
+Terminating processes on user request, this might take some time.
+[Fri Jun 21 18:37:00 2024]
+Error in rule plot:
+    jobid: 5
+    input: /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.on_off.score.csv
+    output: /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.gRNA_design.png
+    shell:
+        /public/software/R/bin/Rscript /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/plot_Structure_gRNA.R --gene TBX5 --gpd /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.gene_pred.txt --gscore /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.on_off.score.csv --outfile /public/NGS_pipeline/CRISPR_related/Inhouse_scripts/pipeline/png/TBX5.gRNA_design.png
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+
+Complete log: ../.snakemake/log/2024-06-21T183652.917367.snakemake.log
